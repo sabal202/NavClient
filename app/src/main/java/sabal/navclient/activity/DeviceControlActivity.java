@@ -82,6 +82,7 @@ public final class DeviceControlActivity extends BaseActivity implements TextToS
             switch (which) {
                 case Dialog.BUTTON_POSITIVE:
                     dialog.cancel();
+
                     break;
             }
         }
