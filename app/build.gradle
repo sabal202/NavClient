@@ -27,3 +27,9 @@ dependencies {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
 }
+group 'app'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
