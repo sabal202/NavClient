@@ -1,11 +1,14 @@
 package sabal.navclient.activity;
 
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.StringRes;
 import android.support.v7.app.AppCompatActivity;
 
+import io.realm.Realm;
 import sabal.navclient.R;
 import sabal.navclient.Utils;
 
@@ -22,6 +25,20 @@ public abstract class BaseActivity extends AppCompatActivity {
     private static final String SAVED_PENDING_REQUEST_ENABLE_BT = "PENDING_REQUEST_ENABLE_BT";
     BluetoothAdapter btAdapter;
     boolean pendingRequestEnableBt = false;
+    private ProgressDialog progressDialog;
+    protected final Realm.Transaction.OnError errorCallback = new Realm.Transaction.OnError() {
+        @Override
+        public void onError(Throwable error) {
+            hideProgress();
+        }
+    };
+
+    protected Realm.Transaction.OnSuccess successCallback = new Realm.Transaction.OnSuccess() {
+        @Override
+        public void onSuccess() {
+            hideProgress();
+        }
+    };
 
     @Override
     protected void onCreate(Bundle state) {
@@ -49,6 +66,26 @@ public abstract class BaseActivity extends AppCompatActivity {
             pendingRequestEnableBt = true;
             Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableIntent, REQUEST_ENABLE_BT);
+        }
+    }
+
+    protected void showProgress(@StringRes int titleRes) {
+        if (progressDialog == null) {
+            progressDialog = new ProgressDialog(this);
+            progressDialog.setCancelable(false);
+        }
+        progressDialog.setTitle(titleRes);
+        try {
+            progressDialog.show();
+        } catch (Exception ignored) {
+        }
+    }
+
+    protected void hideProgress() {
+        if (progressDialog != null) {
+            if (progressDialog.isShowing()) {
+                progressDialog.hide();
+            }
         }
     }
 

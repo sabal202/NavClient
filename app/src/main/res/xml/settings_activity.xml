@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <!-- Режим ввода команд -->
     <PreferenceCategory android:title="@string/commands_mode">
@@ -31,6 +32,17 @@
             android:key="@string/pref_log_direction"
             android:summary="@string/log_direction_summary"
             android:title="@string/log_direction" />
+    </PreferenceCategory>
+    <PreferenceCategory android:title="Map`s version:">
+
+        <Preference
+            android:defaultValue="none"
+            android:editable="false"
+            android:key="edit_text_preference_2"
+            android:selectAllOnFocus="true"
+            android:title="Last update:"
+            android:visibility="visible" />
+
     </PreferenceCategory>
 
 </PreferenceScreen>

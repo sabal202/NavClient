@@ -7,7 +7,17 @@ import android.text.InputFilter;
 import android.text.Spanned;
 import android.util.Log;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Locale;
+
+import static android.text.format.DateUtils.getRelativeTimeSpanString;
+
 public class Utils {
+    public static final String DATE_FORMAT = "%02d.%02d.%d %02d:%02d";
+    private static final String INPUT_PATTERN = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
 
     public static void log(String message) {
         if (BuildConfig.DEBUG) {
@@ -15,6 +25,48 @@ public class Utils {
         }
     }
 
+    public static String getReadableDate(String input) {
+        try {
+            Date date = StringToDate(input);
+            return getRelativeTimeSpanString(MyApplication.getContext(), date.getTime(), true)
+                    .toString();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return input;
+        }
+    }
+
+    public static String getAbsoluteDate(String input) {
+        try {
+            Date date = StringToDate(input);
+
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTime(date);
+
+            return getAbsoluteDate(calendar);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return input;
+        }
+    }
+
+    private static String getAbsoluteDate(Calendar calendar) {
+        int year = calendar.get(Calendar.YEAR);
+        int month = calendar.get(Calendar.MONTH);
+        int day = calendar.get(Calendar.DAY_OF_MONTH);
+
+        int hours = calendar.get(Calendar.HOUR_OF_DAY);
+        int minutes = calendar.get(Calendar.MINUTE);
+
+        return String.format(Locale.getDefault(), DATE_FORMAT,
+                day, month, year, hours, minutes);
+    }
+
+    private static Date StringToDate(String time) throws ParseException {
+        SimpleDateFormat inputFormat = new SimpleDateFormat(INPUT_PATTERN, Locale.getDefault());
+
+        return inputFormat.parse(time);
+    }
     public static String printHex(String hex) {
         StringBuilder sb = new StringBuilder();
         int len = hex.length();

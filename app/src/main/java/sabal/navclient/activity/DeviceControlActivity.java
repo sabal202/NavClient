@@ -17,26 +17,36 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.lang.ref.WeakReference;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 
+import io.realm.Realm;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 import sabal.navclient.DeviceData;
+import sabal.navclient.MyApplication;
 import sabal.navclient.R;
 import sabal.navclient.Utils;
 import sabal.navclient.bluetooth.DeviceConnector;
 import sabal.navclient.bluetooth.DeviceListActivity;
+import sabal.navclient.server_api.models.CityBeacon;
+import sabal.navclient.server_api.models.LastUpdateModel;
+
+import static sabal.navclient.persistance.PreferenceManager.getLastUpdateDate;
 
 
 public final class DeviceControlActivity extends BaseActivity implements TextToSpeech.OnInitListener {
+    public static final int CITY_ID = 2;
     private static final String DEVICE_NAME = "DEVICE_NAME";
     private static final String LOG = "LOG";
-
     private static final SimpleDateFormat timeformat = new SimpleDateFormat("HH:mm:ss.SSS");
-
     private static String MSG_NOT_CONNECTED;
     private static String MSG_CONNECTING;
     private static String MSG_CONNECTED;
@@ -53,25 +63,21 @@ public final class DeviceControlActivity extends BaseActivity implements TextToS
 
     };
     ArrayList<String> log = new ArrayList<>();
+    List<CityBeacon> beaconList;
+    private Realm realm;
     private TextToSpeech mTTS;
     private TextView logTextView;
     private boolean hexMode, needClean;
-    private boolean show_timings, show_direction;
+    private boolean show_timings = true, show_direction = false;
     private String deviceName;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        realm = Realm.getDefaultInstance();
         PreferenceManager.setDefaultValues(this, R.xml.settings_activity, false);
-
         if (mHandler == null) mHandler = new BluetoothResponseHandler(this);
         else mHandler.setTarget(this);
-        /*AlertDialog.Builder adb = new AlertDialog.Builder(this);
-        adb.setTitle(R.string.alert_about_tittle)
-                .setMessage("Текущая версия приложения оптимизирована для смартфонов с диагональю 4.8 дюйма или близкие к этому")
-                .setIcon(android.R.drawable.ic_dialog_info)
-                .setPositiveButton(R.string.alert_about_ok, myClickListener)
-                .create().show();*/
         MSG_NOT_CONNECTED = getString(R.string.msg_not_connected);
         MSG_CONNECTING = getString(R.string.msg_connecting);
         MSG_CONNECTED = getString(R.string.msg_connected);
@@ -80,12 +86,76 @@ public final class DeviceControlActivity extends BaseActivity implements TextToS
         if (isConnected() && (savedInstanceState != null)) {
             setDeviceName(savedInstanceState.getString(DEVICE_NAME));
         } else getSupportActionBar().setSubtitle(MSG_NOT_CONNECTED);
+        beaconList = new ArrayList<>();
+        showProgress(R.string.loading);
+        MyApplication.getApi().getLastUpdateDate(CITY_ID).enqueue(new Callback<LastUpdateModel>() {
+            @Override
+            public void onResponse(Call<LastUpdateModel> call, Response<LastUpdateModel> response) {
+                hideProgress();
+                if (response.body() != null) {
+                    String date = response.body().getLastUpdate();
+                    if (!getLastUpdateDate().equals(date)) {
+                        sabal.navclient.persistance.PreferenceManager.saveLastUpdate(date);
+                        getBeacons();
+                    } else {
+                        getSavedBeacons();
+                    }
+                    //beaconList.addAll(response.body());
+                }
+            }
 
+            @Override
+            public void onFailure(Call<LastUpdateModel> call, Throwable t) {
+                //Toast.makeText(, "Network problems, try later", Toast.LENGTH_SHORT);
+                hideProgress();
+            }
+        });
         this.logTextView = (TextView) findViewById(R.id.log_textview);
         this.logTextView.setMovementMethod(new ScrollingMovementMethod());
         if (savedInstanceState != null)
             logTextView.setText(savedInstanceState.getString(LOG));
 
+    }
+
+    private void getSavedBeacons() {
+        showProgress(R.string.loading);
+        realm.executeTransactionAsync(new Realm.Transaction() {
+            @Override
+            public void execute(Realm realm) {
+                List<CityBeacon> result = realm.where(CityBeacon.class).findAll();
+                beaconList = result;
+            }
+        }, successCallback, errorCallback);
+    }
+
+    private void getBeacons() {
+        showProgress(R.string.loading);
+        MyApplication.getApi().getAllBeaconsFromCity(CITY_ID).enqueue(new Callback<List<CityBeacon>>() {
+            @Override
+            public void onResponse(Call<List<CityBeacon>> call, Response<List<CityBeacon>> response) {
+                if (response.body() != null) {
+                    saveBeacons(response.body());
+                }
+                hideProgress();
+            }
+
+            @Override
+            public void onFailure(Call<List<CityBeacon>> call, Throwable t) {
+                hideProgress();
+                Toast.makeText(DeviceControlActivity.this, "hgbjfhgnjbnvotj", Toast.LENGTH_SHORT);
+            }
+        });
+    }
+
+    private void saveBeacons(final List<CityBeacon> body) {
+        showProgress(R.string.loading);
+        realm.executeTransactionAsync(new Realm.Transaction() {
+            @Override
+            public void execute(Realm realm) {
+                realm.delete(CityBeacon.class);
+                beaconList = realm.copyToRealm(body);
+            }
+        }, successCallback, errorCallback);
     }
 
     @Override
@@ -99,7 +169,6 @@ public final class DeviceControlActivity extends BaseActivity implements TextToS
 
     @Override
     public void onInit(int status) {
-        // TODO Auto-generated method stub
         if (status == TextToSpeech.SUCCESS) {
 
             Locale locale = new Locale("ru");
@@ -171,6 +240,7 @@ public final class DeviceControlActivity extends BaseActivity implements TextToS
                 } else {
                     Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
                     startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+
                 }
                 return true;
 
@@ -254,8 +324,16 @@ public final class DeviceControlActivity extends BaseActivity implements TextToS
 
         msg.append(hexMode ? Utils.printHex(message) : message);
         //if (outgoing) msg.append('\n');
-        String[] numbers = msg.toString().split("\n");
-        logTextView.setText(logTextView.getText() + "\n:::\n" + msg.toString());
+        //String[] numbers = msg.toString().split("\n");
+        logTextView.append("\n" + String.valueOf(msg));
+        int beaconID = Integer.parseInt(msg.toString().split("\n")[0]);
+
+        for (CityBeacon item : beaconList) {
+            if (item.getId() == beaconID) {
+                mTTS.speak(item.getDescription(), TextToSpeech.QUEUE_FLUSH, null);
+            }
+        }
+
         /*if (msg.toString().equals(log.get(log.size() - 1))) {
 
         } else {
@@ -264,7 +342,7 @@ public final class DeviceControlActivity extends BaseActivity implements TextToS
             int IDbe = Integer.parseInt(numbers[0]);
             /*switch (IDbe) {
                 case 1235:
-                    mTTS.speak(getString(R.string.beacon1), TextToSpeech.QUEUE_FLUSH, null);
+
                     break;
                 case 1236:
                     mTTS.speak(getString(R.string.beacon2), TextToSpeech.QUEUE_FLUSH, null);
@@ -349,6 +427,7 @@ public final class DeviceControlActivity extends BaseActivity implements TextToS
                     case MESSAGE_TOAST:
                         // stub
                         break;
+
                     default:
                         break;
                 }
