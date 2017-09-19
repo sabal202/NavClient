@@ -46,6 +46,7 @@ public final class DeviceControlActivity extends BaseActivity implements TextToS
     public static final int CITY_ID = 2;
     private static final String DEVICE_NAME = "DEVICE_NAME";
     private static final String LOG = "LOG";
+
     private static final SimpleDateFormat timeformat = new SimpleDateFormat("HH:mm:ss.SSS");
     private static String MSG_NOT_CONNECTED;
     private static String MSG_CONNECTING;
@@ -64,6 +65,7 @@ public final class DeviceControlActivity extends BaseActivity implements TextToS
     };
     ArrayList<String> log = new ArrayList<>();
     List<CityBeacon> beaconList;
+    int lastRecievedID = -1;
     private Realm realm;
     private TextToSpeech mTTS;
     private TextView logTextView;
@@ -74,7 +76,7 @@ public final class DeviceControlActivity extends BaseActivity implements TextToS
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        realm = Realm.getDefaultInstance();
+
         PreferenceManager.setDefaultValues(this, R.xml.settings_activity, false);
         if (mHandler == null) mHandler = new BluetoothResponseHandler(this);
         else mHandler.setTarget(this);
@@ -86,29 +88,8 @@ public final class DeviceControlActivity extends BaseActivity implements TextToS
         if (isConnected() && (savedInstanceState != null)) {
             setDeviceName(savedInstanceState.getString(DEVICE_NAME));
         } else getSupportActionBar().setSubtitle(MSG_NOT_CONNECTED);
-        showProgress(R.string.loading);
-        MyApplication.getApi().getLastUpdateDate(CITY_ID).enqueue(new Callback<LastUpdateModel>() {
-            @Override
-            public void onResponse(Call<LastUpdateModel> call, Response<LastUpdateModel> response) {
-                hideProgress();
-                if (response.body() != null) {
-                    String date = response.body().getLastUpdate();
-                    if (!getLastUpdateDate().equals(date)) {
-                        sabal.navclient.persistance.PreferenceManager.saveLastUpdate(date);
-                        getBeacons();
-                    } else {
-                        getSavedBeacons();
-                    }
-                    //beaconList.addAll(response.body());
-                }
-            }
 
-            @Override
-            public void onFailure(Call<LastUpdateModel> call, Throwable t) {
-                //Toast.makeText(, "Network problems, try later", Toast.LENGTH_SHORT);
-                hideProgress();
-            }
-        });
+
         this.logTextView = (TextView) findViewById(R.id.log_textview);
         this.logTextView.setMovementMethod(new ScrollingMovementMethod());
         if (savedInstanceState != null)
@@ -273,6 +254,30 @@ public final class DeviceControlActivity extends BaseActivity implements TextToS
     @Override
     public void onStart() {
         super.onStart();
+        realm = Realm.getDefaultInstance();
+        showProgress(R.string.loading);
+        MyApplication.getApi().getLastUpdateDate(CITY_ID).enqueue(new Callback<LastUpdateModel>() {
+            @Override
+            public void onResponse(Call<LastUpdateModel> call, Response<LastUpdateModel> response) {
+                hideProgress();
+                if (response.body() != null) {
+                    String date = response.body().getLastUpdate();
+                    if (!getLastUpdateDate().equals(date)) {
+                        sabal.navclient.persistance.PreferenceManager.saveLastUpdate(date);
+                        getBeacons();
+                    } else {
+                        getSavedBeacons();
+                    }
+                    //beaconList.addAll(response.body());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<LastUpdateModel> call, Throwable t) {
+                //Toast.makeText(, "Network problems, try later", Toast.LENGTH_SHORT);
+                hideProgress();
+            }
+        });
         this.show_timings = Utils.getBooleanPrefence(this, getString(R.string.pref_log_timing));
         this.show_direction = Utils.getBooleanPrefence(this, getString(R.string.pref_log_direction));
         this.needClean = Utils.getBooleanPrefence(this, getString(R.string.pref_need_clean));
@@ -320,11 +325,11 @@ public final class DeviceControlActivity extends BaseActivity implements TextToS
         StringBuilder msg = new StringBuilder();
 
 
-
         //if (outgoing) msg.append('\n');
         //String[] numbers = msg.toString().split("\n");
         String gettedID = hexMode ? Utils.printHex(message) : message;
         int beaconID = Integer.parseInt(gettedID.split("\r\n")[0]);
+
         if (show_timings) msg.append('[').append(timeformat.format(new Date())).append(']');
         if (show_direction) {
             final String arrow = (outgoing ? " << " : " >> ");
@@ -333,12 +338,19 @@ public final class DeviceControlActivity extends BaseActivity implements TextToS
         msg.append(hexMode ? Utils.printHex(message) : message);
         logTextView.append("\n" + String.valueOf(msg));
         if (realm.isClosed()) realm = Realm.getDefaultInstance();
+
         for (CityBeacon item : beaconList) {
             if (item.getId() == beaconID) {
-                mTTS.speak(item.getDescription(), TextToSpeech.QUEUE_FLUSH, null);
+
+                if (lastRecievedID != beaconID || !mTTS.isSpeaking()) {
+                    mTTS.setSpeechRate(0.8f);
+                    mTTS.speak(item.getDescription(), TextToSpeech.QUEUE_FLUSH, null);
+
+                }
+                break;
             }
         }
-
+        lastRecievedID = beaconID;
         /*if (msg.toString().equals(log.get(log.size() - 1))) {
 
         } else {
