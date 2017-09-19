@@ -142,7 +142,7 @@ public final class SettingsActivity extends PreferenceActivity
             @Override
             public void onFailure(Call<List<CityBeacon>> call, Throwable t) {
                 hideProgress();
-                Toast.makeText(SettingsActivity.this, "hgbjfhgnjbnvotj", Toast.LENGTH_SHORT);
+                Toast.makeText(SettingsActivity.this, "Проблемы с сетью", Toast.LENGTH_SHORT).show();
             }
         });
     }

@@ -86,7 +86,6 @@ public final class DeviceControlActivity extends BaseActivity implements TextToS
         if (isConnected() && (savedInstanceState != null)) {
             setDeviceName(savedInstanceState.getString(DEVICE_NAME));
         } else getSupportActionBar().setSubtitle(MSG_NOT_CONNECTED);
-        beaconList = new ArrayList<>();
         showProgress(R.string.loading);
         MyApplication.getApi().getLastUpdateDate(CITY_ID).enqueue(new Callback<LastUpdateModel>() {
             @Override
@@ -316,18 +315,19 @@ public final class DeviceControlActivity extends BaseActivity implements TextToS
             log.add("0");
         }
         StringBuilder msg = new StringBuilder();
+
+
+        msg.append(hexMode ? Utils.printHex(message) : message);
+        //if (outgoing) msg.append('\n');
+        //String[] numbers = msg.toString().split("\n");
+
+        int beaconID = Integer.parseInt(msg.toString().split("\r\n")[0]);
         if (show_timings) msg.append('[').append(timeformat.format(new Date())).append(']');
         if (show_direction) {
             final String arrow = (outgoing ? " << " : " >> ");
             msg.append(arrow);
         } else msg.append(' ');
-
-        msg.append(hexMode ? Utils.printHex(message) : message);
-        //if (outgoing) msg.append('\n');
-        //String[] numbers = msg.toString().split("\n");
         logTextView.append("\n" + String.valueOf(msg));
-        int beaconID = Integer.parseInt(msg.toString().split("\n")[0]);
-
         for (CityBeacon item : beaconList) {
             if (item.getId() == beaconID) {
                 mTTS.speak(item.getDescription(), TextToSpeech.QUEUE_FLUSH, null);
