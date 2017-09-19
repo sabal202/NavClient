@@ -70,6 +70,7 @@ public abstract class BaseActivity extends AppCompatActivity {
     }
 
     protected void showProgress(@StringRes int titleRes) {
+
         if (progressDialog == null) {
             progressDialog = new ProgressDialog(this);
             progressDialog.setCancelable(false);

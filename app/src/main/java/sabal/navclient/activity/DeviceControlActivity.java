@@ -121,7 +121,8 @@ public final class DeviceControlActivity extends BaseActivity implements TextToS
         realm.executeTransactionAsync(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
-                List<CityBeacon> result = realm.where(CityBeacon.class).findAll();
+                List<CityBeacon> result = realm.copyFromRealm(realm.where(CityBeacon.class).findAll());
+
                 beaconList = result;
             }
         }, successCallback, errorCallback);
@@ -163,6 +164,8 @@ public final class DeviceControlActivity extends BaseActivity implements TextToS
             mTTS.stop();
             mTTS.shutdown();
         }
+        realm.close();
+        hideProgress();
         super.onDestroy();
     }
 
@@ -270,8 +273,8 @@ public final class DeviceControlActivity extends BaseActivity implements TextToS
     @Override
     public void onStart() {
         super.onStart();
-        //this.show_timings = Utils.getBooleanPrefence(this, getString(R.string.pref_log_timing));
-        //this.show_direction = Utils.getBooleanPrefence(this, getString(R.string.pref_log_direction));
+        this.show_timings = Utils.getBooleanPrefence(this, getString(R.string.pref_log_timing));
+        this.show_direction = Utils.getBooleanPrefence(this, getString(R.string.pref_log_direction));
         this.needClean = Utils.getBooleanPrefence(this, getString(R.string.pref_need_clean));
     }
 
@@ -317,17 +320,19 @@ public final class DeviceControlActivity extends BaseActivity implements TextToS
         StringBuilder msg = new StringBuilder();
 
 
-        msg.append(hexMode ? Utils.printHex(message) : message);
+
         //if (outgoing) msg.append('\n');
         //String[] numbers = msg.toString().split("\n");
-
-        int beaconID = Integer.parseInt(msg.toString().split("\r\n")[0]);
+        String gettedID = hexMode ? Utils.printHex(message) : message;
+        int beaconID = Integer.parseInt(gettedID.split("\r\n")[0]);
         if (show_timings) msg.append('[').append(timeformat.format(new Date())).append(']');
         if (show_direction) {
             final String arrow = (outgoing ? " << " : " >> ");
             msg.append(arrow);
         } else msg.append(' ');
+        msg.append(hexMode ? Utils.printHex(message) : message);
         logTextView.append("\n" + String.valueOf(msg));
+        if (realm.isClosed()) realm = Realm.getDefaultInstance();
         for (CityBeacon item : beaconList) {
             if (item.getId() == beaconID) {
                 mTTS.speak(item.getDescription(), TextToSpeech.QUEUE_FLUSH, null);
