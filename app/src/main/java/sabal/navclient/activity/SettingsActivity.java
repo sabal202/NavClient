@@ -44,6 +44,7 @@ public final class SettingsActivity extends PreferenceActivity
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String value) {
         setPrefenceTitle(value);
     }
+
     private void setPrefenceTitle(String TAG) {
         final Preference preference = findPreference(TAG);
         if (preference == null) return;

@@ -5,24 +5,22 @@ import android.bluetooth.BluetoothAdapter;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+
 import sabal.navclient.R;
 import sabal.navclient.Utils;
 
 
 public abstract class BaseActivity extends AppCompatActivity {
 
-    static final int REQUEST_CONNECT_DEVICE = 1;
-    static final int REQUEST_ENABLE_BT = 2;
-
     public static final int MESSAGE_STATE_CHANGE = 1;
     public static final int MESSAGE_READ = 2;
     public static final int MESSAGE_WRITE = 3;
     public static final int MESSAGE_DEVICE_NAME = 4;
     public static final int MESSAGE_TOAST = 5;
-
-    BluetoothAdapter btAdapter;
-
+    static final int REQUEST_CONNECT_DEVICE = 1;
+    static final int REQUEST_ENABLE_BT = 2;
     private static final String SAVED_PENDING_REQUEST_ENABLE_BT = "PENDING_REQUEST_ENABLE_BT";
+    BluetoothAdapter btAdapter;
     boolean pendingRequestEnableBt = false;
 
     @Override
@@ -76,6 +74,7 @@ public abstract class BaseActivity extends AppCompatActivity {
     boolean isAdapterReady() {
         return (btAdapter != null) && (btAdapter.isEnabled());
     }
+
     void showAlertDialog(String message) {
         AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
         alertDialogBuilder.setTitle(getString(R.string.app_name));

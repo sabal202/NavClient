@@ -33,22 +33,18 @@ import sabal.navclient.activity.DeviceControlActivity;
 
 
 public class DeviceConnector {
-    private static final String TAG = "DeviceConnector";
-    private static final boolean D = false;
-
-
     public static final int STATE_NONE = 0;
     public static final int STATE_CONNECTING = 1;
     public static final int STATE_CONNECTED = 2;
-
-    private int mState;
-
+    private static final String TAG = "DeviceConnector";
+    private static final boolean D = false;
     private final BluetoothAdapter btAdapter;
     private final BluetoothDevice connectedDevice;
-    private ConnectThread mConnectThread;
-    private ConnectedThread mConnectedThread;
     private final Handler mHandler;
     private final String deviceName;
+    private int mState;
+    private ConnectThread mConnectThread;
+    private ConnectedThread mConnectedThread;
 
     public DeviceConnector(DeviceData deviceData, Handler handler) {
         mHandler = handler;
@@ -57,6 +53,7 @@ public class DeviceConnector {
         deviceName = (deviceData.getName() == null) ? deviceData.getAddress() : deviceData.getName();
         mState = STATE_NONE;
     }
+
     public synchronized void connect() {
         if (D) Log.d(TAG, "connect to: " + connectedDevice);
 
@@ -78,6 +75,7 @@ public class DeviceConnector {
         mConnectThread.start();
         setState(STATE_CONNECTING);
     }
+
     public synchronized void stop() {
         if (D) Log.d(TAG, "stop");
 
@@ -95,14 +93,17 @@ public class DeviceConnector {
 
         setState(STATE_NONE);
     }
+
+    public synchronized int getState() {
+        return mState;
+    }
+
     private synchronized void setState(int state) {
         if (D) Log.d(TAG, "setState() " + mState + " -> " + state);
         mState = state;
         mHandler.obtainMessage(DeviceControlActivity.MESSAGE_STATE_CHANGE, state, -1).sendToTarget();
     }
-    public synchronized int getState() {
-        return mState;
-    }
+
     public synchronized void connected(BluetoothSocket socket) {
         if (D) Log.d(TAG, "connected");
 
@@ -158,6 +159,7 @@ public class DeviceConnector {
         mHandler.sendMessage(msg);
         setState(STATE_NONE);
     }
+
     private class ConnectThread extends Thread {
         private static final String TAG = "ConnectThread";
         private static final boolean D = false;
@@ -165,11 +167,12 @@ public class DeviceConnector {
         private final BluetoothSocket mmSocket;
         private final BluetoothDevice mmDevice;
 
-        public ConnectThread(BluetoothDevice device) {
+        ConnectThread(BluetoothDevice device) {
             if (D) Log.d(TAG, "create ConnectThread");
             mmDevice = device;
             mmSocket = BluetoothUtils.createRfcommSocket(mmDevice);
         }
+
         public void run() {
             if (D) Log.d(TAG, "ConnectThread run");
             btAdapter.cancelDiscovery();
@@ -213,6 +216,7 @@ public class DeviceConnector {
             }
         }
     }
+
     private class ConnectedThread extends Thread {
         private static final String TAG = "ConnectedThread";
         private static final boolean D = false;
@@ -262,6 +266,7 @@ public class DeviceConnector {
                 }
             }
         }
+
         public void writeData(byte[] chunk) {
 
             try {
@@ -272,6 +277,7 @@ public class DeviceConnector {
                 if (D) Log.e(TAG, "Exception during write", e);
             }
         }
+
         public void write(byte command) {
             byte[] buffer = new byte[1];
             buffer[0] = command;
@@ -284,6 +290,7 @@ public class DeviceConnector {
                 if (D) Log.e(TAG, "Exception during write", e);
             }
         }
+
         public void cancel() {
             try {
                 mmSocket.close();

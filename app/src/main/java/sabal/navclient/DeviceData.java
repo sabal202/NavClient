@@ -9,12 +9,12 @@ import sabal.navclient.bluetooth.BluetoothUtils;
 
 
 public class DeviceData {
+    private final int deviceClass;
+    private final int majorDeviceClass;
     private String name = "";
     private String address = "";
     private int bondState = BluetoothDevice.BOND_NONE;
     private ArrayList<ParcelUuid> uuids = null;
-    private final int deviceClass;
-    private final int majorDeviceClass;
 
     public DeviceData(BluetoothDevice device, String emptyName) {
         name = device.getName();
@@ -47,15 +47,15 @@ public class DeviceData {
         return majorDeviceClass;
     }
 
-    public void setBondState(int state) {
-        bondState = state;
-    }
-
     public ArrayList<ParcelUuid> getUuids() {
         return uuids;
     }
 
     public int getBondState() {
         return bondState;
+    }
+
+    public void setBondState(int state) {
+        bondState = state;
     }
 }

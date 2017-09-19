@@ -14,6 +14,7 @@ public class Utils {
             if (message != null) Log.i(Const.TAG, message);
         }
     }
+
     public static String printHex(String hex) {
         StringBuilder sb = new StringBuilder();
         int len = hex.length();
@@ -47,20 +48,24 @@ public class Utils {
         }
         return result;
     }
+
     public static byte[] concat(byte[] A, byte[] B) {
         byte[] C = new byte[A.length + B.length];
         System.arraycopy(A, 0, C, 0, A.length);
         System.arraycopy(B, 0, C, A.length, B.length);
         return C;
     }
+
     public static String getPrefence(Context context, String item) {
         final SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(context);
         return settings.getString(item, Const.TAG);
     }
+
     public static boolean getBooleanPrefence(Context context, String tag) {
         final SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(context);
         return settings.getBoolean(tag, true);
     }
+
     public static class InputFilterHex implements InputFilter {
 
         @Override

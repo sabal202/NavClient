@@ -42,6 +42,17 @@ public final class DeviceControlActivity extends BaseActivity implements TextToS
     private static String MSG_CONNECTED;
     private static DeviceConnector connector;
     private static BluetoothResponseHandler mHandler;
+    DialogInterface.OnClickListener myClickListener = new DialogInterface.OnClickListener() {
+        public void onClick(DialogInterface dialog, int which) {
+            switch (which) {
+                case Dialog.BUTTON_POSITIVE:
+                    dialog.cancel();
+                    break;
+            }
+        }
+
+    };
+    ArrayList<String> log = new ArrayList<>();
     private TextToSpeech mTTS;
     private TextView logTextView;
     private boolean hexMode, needClean;
@@ -76,18 +87,6 @@ public final class DeviceControlActivity extends BaseActivity implements TextToS
             logTextView.setText(savedInstanceState.getString(LOG));
 
     }
-
-    DialogInterface.OnClickListener myClickListener = new DialogInterface.OnClickListener() {
-        public void onClick(DialogInterface dialog, int which) {
-            switch (which) {
-                case Dialog.BUTTON_POSITIVE:
-                    dialog.cancel();
-
-                    break;
-            }
-        }
-
-    };
 
     @Override
     public void onDestroy() {
@@ -142,7 +141,6 @@ public final class DeviceControlActivity extends BaseActivity implements TextToS
             deviceName = null;
         }
     }
-
 
     private void startDeviceListActivity() {
         stopConnection();
@@ -225,6 +223,9 @@ public final class DeviceControlActivity extends BaseActivity implements TextToS
                     Utils.log("BT not enabled");
                 }
                 break;
+
+            default:
+                break;
         }
     }
 
@@ -240,18 +241,16 @@ public final class DeviceControlActivity extends BaseActivity implements TextToS
         }
     }
 
-    ArrayList<String> log = new ArrayList<>();
-
     void appendLog(String message, boolean hexMode, boolean outgoing, boolean clean) {
         if (log.size() == 0) {
             log.add("0");
         }
         StringBuilder msg = new StringBuilder();
-        if (show_timings) msg.append("[").append(timeformat.format(new Date())).append("]");
+        if (show_timings) msg.append('[').append(timeformat.format(new Date())).append(']');
         if (show_direction) {
             final String arrow = (outgoing ? " << " : " >> ");
             msg.append(arrow);
-        } else msg.append(" ");
+        } else msg.append(' ');
 
         msg.append(hexMode ? Utils.printHex(message) : message);
         //if (outgoing) msg.append('\n');
@@ -327,6 +326,8 @@ public final class DeviceControlActivity extends BaseActivity implements TextToS
                             case DeviceConnector.STATE_NONE:
                                 bar.setSubtitle(MSG_NOT_CONNECTED);
                                 break;
+                            default:
+                                break;
                         }
                         break;
 
@@ -347,6 +348,8 @@ public final class DeviceControlActivity extends BaseActivity implements TextToS
 
                     case MESSAGE_TOAST:
                         // stub
+                        break;
+                    default:
                         break;
                 }
             }
