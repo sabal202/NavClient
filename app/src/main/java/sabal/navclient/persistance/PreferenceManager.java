@@ -9,6 +9,7 @@ import android.content.SharedPreferences;
 
 public class PreferenceManager {
     private static final String LAST_UPDATE_DATE = "LAST_UPDATE_DATE";
+    private static final String LAST_DEVICE = "LAST_DEVICE";
     private static SharedPreferences preferences;
 
     public static void with(Context context) {
@@ -21,6 +22,15 @@ public class PreferenceManager {
         editor.apply();
     }
 
+    public static void saveLastDevice(String device) {
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putString(LAST_DEVICE, device);
+        editor.apply();
+    }
+
+    public static String getLastDevice() {
+        return preferences.getString(LAST_DEVICE, "none");
+    }
     public static String getLastUpdateDate() {
         return preferences.getString(LAST_UPDATE_DATE, "none");
     }

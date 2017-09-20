@@ -12,6 +12,7 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
+import java.util.TimeZone;
 
 import static android.text.format.DateUtils.getRelativeTimeSpanString;
 
@@ -39,8 +40,9 @@ public class Utils {
     public static String getAbsoluteDate(String input) {
         try {
             Date date = StringToDate(input);
-
             Calendar calendar = Calendar.getInstance();
+            TimeZone tz = TimeZone.getDefault();
+            calendar.setTimeZone(tz);
             calendar.setTime(date);
 
             return getAbsoluteDate(calendar);
@@ -55,9 +57,12 @@ public class Utils {
         int month = calendar.get(Calendar.MONTH);
         int day = calendar.get(Calendar.DAY_OF_MONTH);
 
-        int hours = calendar.get(Calendar.HOUR_OF_DAY);
-        int minutes = calendar.get(Calendar.MINUTE);
-
+        int offset = calendar.get(Calendar.ZONE_OFFSET) / 60 / 1000; //in minutes
+        int hours = (calendar.get(Calendar.HOUR_OF_DAY) + offset / 60) % 24;
+        int minutes = calendar.get(Calendar.MINUTE) + offset % 60;
+        if (minutes >= 60)
+            hours++;
+        minutes %= 60;
         return String.format(Locale.getDefault(), DATE_FORMAT,
                 day, month, year, hours, minutes);
     }

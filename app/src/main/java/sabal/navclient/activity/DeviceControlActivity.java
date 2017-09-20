@@ -44,15 +44,16 @@ import static sabal.navclient.persistance.PreferenceManager.getLastUpdateDate;
 
 public final class DeviceControlActivity extends BaseActivity implements TextToSpeech.OnInitListener {
     public static final int CITY_ID = 2;
+    // TODO crate pref for city id
     private static final String DEVICE_NAME = "DEVICE_NAME";
     private static final String LOG = "LOG";
-
     private static final SimpleDateFormat timeformat = new SimpleDateFormat("HH:mm:ss.SSS");
     private static String MSG_NOT_CONNECTED;
     private static String MSG_CONNECTING;
     private static String MSG_CONNECTED;
     private static DeviceConnector connector;
     private static BluetoothResponseHandler mHandler;
+    boolean said = false;
     DialogInterface.OnClickListener myClickListener = new DialogInterface.OnClickListener() {
         public void onClick(DialogInterface dialog, int which) {
             switch (which) {
@@ -77,7 +78,7 @@ public final class DeviceControlActivity extends BaseActivity implements TextToS
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // TODO connect to last deice
+
         PreferenceManager.setDefaultValues(this, R.xml.settings_activity, false);
         if (mHandler == null) mHandler = new BluetoothResponseHandler(this);
         else mHandler.setTarget(this);
@@ -86,7 +87,11 @@ public final class DeviceControlActivity extends BaseActivity implements TextToS
         MSG_CONNECTED = getString(R.string.msg_connected);
         mTTS = new TextToSpeech(this, this);
         setContentView(R.layout.activity_terminal);
-
+        String mDevice = sabal.navclient.persistance.PreferenceManager.getLastDevice();
+        if (!mDevice.equals("none")) {
+            BluetoothDevice device = btAdapter.getRemoteDevice(mDevice);
+            if (super.isAdapterReady() && (connector == null)) setupConnector(device);
+        }
         if (isConnected() && (savedInstanceState != null)) {
             setDeviceName(savedInstanceState.getString(DEVICE_NAME));
         } else getSupportActionBar().setSubtitle(MSG_NOT_CONNECTED);
@@ -124,7 +129,7 @@ public final class DeviceControlActivity extends BaseActivity implements TextToS
             @Override
             public void onFailure(Call<List<CityBeacon>> call, Throwable t) {
                 hideProgress();
-                Toast.makeText(DeviceControlActivity.this, "hgbjfhgnjbnvotj", Toast.LENGTH_SHORT);
+                Toast.makeText(DeviceControlActivity.this, "failture", Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -293,6 +298,7 @@ public final class DeviceControlActivity extends BaseActivity implements TextToS
                 if (resultCode == Activity.RESULT_OK) {
                     String address = data.getStringExtra(DeviceListActivity.EXTRA_DEVICE_ADDRESS);
                     BluetoothDevice device = btAdapter.getRemoteDevice(address);
+                    sabal.navclient.persistance.PreferenceManager.saveLastDevice(address);
                     if (super.isAdapterReady() && (connector == null)) setupConnector(device);
                 }
                 break;
@@ -330,7 +336,8 @@ public final class DeviceControlActivity extends BaseActivity implements TextToS
         //if (outgoing) msg.append('\n');
         //String[] numbers = msg.toString().split("\n");
         String gettedID = hexMode ? Utils.printHex(message) : message;
-        int beaconID = Integer.parseInt(gettedID.split("\r\n")[0]);
+        int beaconID = Integer.parseInt(gettedID.replaceAll("\r\n", "").substring(0, 3));
+        //Integer.parseInt(gettedID.split("\r\n")[0].replaceAll("\r\n", ""));
         if (show_log) {
             if (show_timings) msg.append('[').append(timeformat.format(new Date())).append(']');
             if (show_direction) {
@@ -344,6 +351,7 @@ public final class DeviceControlActivity extends BaseActivity implements TextToS
 
         if (realm.isClosed()) realm = Realm.getDefaultInstance();
         if (beaconList != null) {
+            said = false;
             for (CityBeacon item : beaconList) {
                 if (item.getId() == beaconID) {
                     msg.append(" >> " + item.getDescription());
@@ -357,8 +365,12 @@ public final class DeviceControlActivity extends BaseActivity implements TextToS
                 }
             }
         } else {
-            Toast.makeText(this, "No beacons found", Toast.LENGTH_SHORT).show();
-            mTTS.speak("Обновите базу маяков", TextToSpeech.QUEUE_FLUSH, null);
+
+            if (!mTTS.isSpeaking() && !said) {
+                said = true;
+                mTTS.speak("Обновите базу маяков", TextToSpeech.QUEUE_FLUSH, null);
+                Toast.makeText(this, "Обновите базу маяков", Toast.LENGTH_LONG).show();
+            }
         }
 
         lastRecievedID = beaconID;
