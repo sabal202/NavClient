@@ -70,8 +70,9 @@ public final class DeviceControlActivity extends BaseActivity implements TextToS
     private TextToSpeech mTTS;
     private TextView logTextView;
     private boolean hexMode, needClean;
-    private boolean show_timings = true, show_direction = false;
+    private boolean show_timings, show_direction;
     private String deviceName;
+    private boolean show_log;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -280,6 +281,7 @@ public final class DeviceControlActivity extends BaseActivity implements TextToS
         });
         this.show_timings = Utils.getBooleanPrefence(this, getString(R.string.pref_log_timing));
         this.show_direction = Utils.getBooleanPrefence(this, getString(R.string.pref_log_direction));
+        this.show_log = Utils.getBooleanPrefence(this, getString(R.string.pref_log_enable));
         this.needClean = Utils.getBooleanPrefence(this, getString(R.string.pref_need_clean));
     }
 
@@ -329,27 +331,32 @@ public final class DeviceControlActivity extends BaseActivity implements TextToS
         //String[] numbers = msg.toString().split("\n");
         String gettedID = hexMode ? Utils.printHex(message) : message;
         int beaconID = Integer.parseInt(gettedID.split("\r\n")[0]);
+        if (show_log) {
+            if (show_timings) msg.append('[').append(timeformat.format(new Date())).append(']');
+            if (show_direction) {
+                final String arrow = (outgoing ? " << " : " >> ");
+                msg.append(arrow);
+            } else msg.append(' ');
+        }
 
-        if (show_timings) msg.append('[').append(timeformat.format(new Date())).append(']');
-        if (show_direction) {
-            final String arrow = (outgoing ? " << " : " >> ");
-            msg.append(arrow);
-        } else msg.append(' ');
         msg.append(hexMode ? Utils.printHex(message) : message);
-        logTextView.append("\n" + String.valueOf(msg));
+
+
         if (realm.isClosed()) realm = Realm.getDefaultInstance();
 
         for (CityBeacon item : beaconList) {
             if (item.getId() == beaconID) {
-
+                msg.append(" >> " + item.getDescription());
                 if (lastRecievedID != beaconID || !mTTS.isSpeaking()) {
                     mTTS.setSpeechRate(0.8f);
                     mTTS.speak(item.getDescription(), TextToSpeech.QUEUE_FLUSH, null);
 
                 }
+                if (show_log) logTextView.append("\n" + String.valueOf(msg));
                 break;
             }
         }
+
         lastRecievedID = beaconID;
         /*if (msg.toString().equals(log.get(log.size() - 1))) {
 

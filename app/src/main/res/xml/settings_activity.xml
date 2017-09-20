@@ -12,15 +12,15 @@
             android:key="@string/pref_commands_mode"
             android:summary="@string/commands_mode_summary" />
 
-        <CheckBoxPreference
-            android:defaultValue="true"
-            android:key="@string/pref_need_clean"
-            android:summary="@string/need_clean_summary"
-            android:title="@string/need_clean" />
     </PreferenceCategory>
 
     <!-- История команд -->
     <PreferenceCategory android:title="@string/log_settings_category">
+        <CheckBoxPreference
+            android:defaultValue="true"
+            android:key="@string/pref_log_enable"
+            android:summary="@string/log_enable_summary"
+            android:title="@string/pref_log_show_title" />
         <CheckBoxPreference
             android:defaultValue="true"
             android:key="@string/pref_log_timing"
