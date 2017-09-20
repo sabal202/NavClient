@@ -86,10 +86,10 @@ public final class DeviceControlActivity extends BaseActivity implements TextToS
         MSG_CONNECTED = getString(R.string.msg_connected);
         mTTS = new TextToSpeech(this, this);
         setContentView(R.layout.activity_terminal);
+
         if (isConnected() && (savedInstanceState != null)) {
             setDeviceName(savedInstanceState.getString(DEVICE_NAME));
         } else getSupportActionBar().setSubtitle(MSG_NOT_CONNECTED);
-
 
         this.logTextView = (TextView) findViewById(R.id.log_textview);
         this.logTextView.setMovementMethod(new ScrollingMovementMethod());
@@ -343,47 +343,25 @@ public final class DeviceControlActivity extends BaseActivity implements TextToS
 
 
         if (realm.isClosed()) realm = Realm.getDefaultInstance();
+        if (beaconList != null) {
+            for (CityBeacon item : beaconList) {
+                if (item.getId() == beaconID) {
+                    msg.append(" >> " + item.getDescription());
+                    if (lastRecievedID != beaconID || !mTTS.isSpeaking()) {
+                        mTTS.setSpeechRate(0.8f);
+                        mTTS.speak(item.getDescription(), TextToSpeech.QUEUE_FLUSH, null);
 
-        for (CityBeacon item : beaconList) {
-            if (item.getId() == beaconID) {
-                msg.append(" >> " + item.getDescription());
-                if (lastRecievedID != beaconID || !mTTS.isSpeaking()) {
-                    mTTS.setSpeechRate(0.8f);
-                    mTTS.speak(item.getDescription(), TextToSpeech.QUEUE_FLUSH, null);
-
+                    }
+                    if (show_log) logTextView.append("\n" + String.valueOf(msg));
+                    break;
                 }
-                if (show_log) logTextView.append("\n" + String.valueOf(msg));
-                break;
             }
+        } else {
+            Toast.makeText(this, "No beacons found", Toast.LENGTH_SHORT).show();
+            mTTS.speak("Обновите базу маяков", TextToSpeech.QUEUE_FLUSH, null);
         }
 
         lastRecievedID = beaconID;
-        /*if (msg.toString().equals(log.get(log.size() - 1))) {
-
-        } else {
-            log.add(msg.toString());
-            logTextView.setText(log.get(log.size() - 1));
-            int IDbe = Integer.parseInt(numbers[0]);
-            /*switch (IDbe) {
-                case 1235:
-
-                    break;
-                case 1236:
-                    mTTS.speak(getString(R.string.beacon2), TextToSpeech.QUEUE_FLUSH, null);
-                    break;
-                case 1234:
-                    mTTS.speak(getString(R.string.beacon3), TextToSpeech.QUEUE_FLUSH, null);
-                    break;
-                case 1237:
-
-                    mTTS.speak(getString(R.string.beacon4), TextToSpeech.QUEUE_FLUSH, null);
-                    break;
-                default:
-                    Toast.makeText(this, "null" + numbers[0].charAt(0) + "  " + numbers[0].charAt(1) + "  " + numbers[0].charAt(2) + "  " + numbers[0].charAt(3) + IDbe + "  " + msg.toString() + "  " + numbers[0].length() + "  " + numbers[0], Toast.LENGTH_LONG).show();
-                    break;
-            }
-        }*/
-
 
         final int scrollAmount = logTextView.getLayout().getLineTop(logTextView.getLineCount()) - logTextView.getHeight();
         if (scrollAmount > 0)
