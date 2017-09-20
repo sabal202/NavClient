@@ -339,7 +339,7 @@ public final class DeviceControlActivity extends BaseActivity implements TextToS
             } else msg.append(' ');
         }
 
-        msg.append(hexMode ? Utils.printHex(message) : message);
+        msg.append(beaconID);
 
 
         if (realm.isClosed()) realm = Realm.getDefaultInstance();
