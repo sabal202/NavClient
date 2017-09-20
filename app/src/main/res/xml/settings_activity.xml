@@ -7,6 +7,7 @@
         <ListPreference
             android:defaultValue="ASCII"
             android:dialogTitle="@string/commands_mode"
+            android:enabled="false"
             android:entries="@array/commands_mode"
             android:entryValues="@array/commands_mode"
             android:key="@string/pref_commands_mode"
@@ -22,25 +23,27 @@
             android:summary="@string/log_enable_summary"
             android:title="@string/pref_log_show_title" />
         <CheckBoxPreference
-            android:defaultValue="true"
+            android:defaultValue="false"
             android:key="@string/pref_log_timing"
             android:summary="@string/log_time_summary"
             android:title="@string/log_time" />
 
         <CheckBoxPreference
-            android:defaultValue="true"
+            android:defaultValue="false"
+            android:enabled="false"
             android:key="@string/pref_log_direction"
             android:summary="@string/log_direction_summary"
             android:title="@string/log_direction" />
     </PreferenceCategory>
-    <PreferenceCategory android:title="Map`s version:">
+    <PreferenceCategory android:title="@string/last_update_summary">
 
         <Preference
             android:defaultValue="none"
             android:editable="false"
             android:key="edit_text_preference_2"
             android:selectAllOnFocus="true"
-            android:title="Last update:"
+            android:summary="@string/last_update_summary"
+            android:title="@string/last_updatr_title"
             android:visibility="visible" />
 
     </PreferenceCategory>

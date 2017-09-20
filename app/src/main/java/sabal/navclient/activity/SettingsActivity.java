@@ -67,7 +67,7 @@ public final class SettingsActivity extends PreferenceActivity
         setPrefenceTitle(getString(R.string.pref_commands_ending));
 
         lastUpdate = findPreference("edit_text_preference_2");
-        setLustUpdateText();
+        setLastUpdateText();
         lastUpdate.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference preference) {
@@ -156,7 +156,7 @@ public final class SettingsActivity extends PreferenceActivity
                     String date = response.body().getLastUpdate();
                     if (!getLastUpdateDate().equals(date)) {
                         sabal.navclient.persistance.PreferenceManager.saveLastUpdate(date);
-                        setLustUpdateText();
+                        setLastUpdateText();
                         getBeacons();
                     }
                     //beaconList.addAll(response.body());
@@ -171,7 +171,7 @@ public final class SettingsActivity extends PreferenceActivity
         });
     }
 
-    private void setLustUpdateText() {
+    private void setLastUpdateText() {
         String date = sabal.navclient.persistance.PreferenceManager.getLastUpdateDate();
         lastUpdate.setSummary(Utils.getAbsoluteDate(date));
     }

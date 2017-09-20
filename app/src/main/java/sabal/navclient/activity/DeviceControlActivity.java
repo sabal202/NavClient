@@ -77,7 +77,7 @@ public final class DeviceControlActivity extends BaseActivity implements TextToS
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        // TODO connect to last deice
         PreferenceManager.setDefaultValues(this, R.xml.settings_activity, false);
         if (mHandler == null) mHandler = new BluetoothResponseHandler(this);
         else mHandler.setTarget(this);

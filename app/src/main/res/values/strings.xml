@@ -37,7 +37,7 @@
     <string name="log_settings_category">История команд:</string>
     <string name="log_time">Время сообщения:</string>
     <string name="log_time_summary">Показывать время в логе</string>
-    <string name="log_direction">Направление</string>
+    <string name="log_direction">Направление команд</string>
     <string name="log_direction_summary">Показывать направление в логе</string>
     <string name="commands_mode">Режим приема:</string>
     <string name="commands_mode_summary">Выберите режим приема</string>
@@ -48,4 +48,6 @@
     <string name="pref_log_enable">pref_log_enable</string>
     <string name="log_enable_summary">Показывать лог на главном экране</string>
     <string name="pref_log_show_title">Показывать лог</string>
+    <string name="last_update_summary">Нажмите, чтобы проверить обновление:</string>
+    <string name="last_updatr_title">Последнее обновление:</string>
 </resources>
