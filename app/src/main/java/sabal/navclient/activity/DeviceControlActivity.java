@@ -336,7 +336,13 @@ public final class DeviceControlActivity extends BaseActivity implements TextToS
         //if (outgoing) msg.append('\n');
         //String[] numbers = msg.toString().split("\n");
         String gettedID = hexMode ? Utils.printHex(message) : message;
-        int beaconID = Integer.parseInt(gettedID.replaceAll("\r\n", "").substring(0, 3));
+        int beaconID;
+        int len = gettedID.replaceAll("\r\n", "").length();
+        if (len > 3)
+            beaconID = -1;
+        else if (len == 3)
+            beaconID = Integer.parseInt(gettedID.replaceAll("\r\n", "").substring(0, 3));
+        else beaconID = -1;
         //Integer.parseInt(gettedID.split("\r\n")[0].replaceAll("\r\n", ""));
         if (show_log) {
             if (show_timings) msg.append('[').append(timeformat.format(new Date())).append(']');
